@@ -144,10 +144,10 @@ def main():
     col1, col2 = st.columns(2)
     with col1:
         # Defaults to 8:00 AM
-        start_time = st.time_input("Start Time", value=time(8, 0))
+        start_time = st.time_input("Start Time", value=time(8, 0), step=300)
     with col2:
         # Defaults to 9:50 AM
-        end_time = st.time_input("End Time", value=time(9, 50))
+        end_time = st.time_input("End Time", value=time(9, 50), step=300)
 
     # 2. Calculate Duration
     # Convert time objects to datetime to perform subtraction
