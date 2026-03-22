@@ -194,7 +194,11 @@ def parse_time(time_str):
 
 def main():
     st.title("⏰ CCCCO Instructional Hours Calculator")
-    
+    st.set_page_config(
+        page_title="⏰ CCCCO Hours",
+        page_icon="chart_with_upwards_trend",
+        layout="wide",
+    )
     #st.markdown("Select class times to calculate apportionment and instructional hours.")
 
     # 1. Time Selection Inputs
