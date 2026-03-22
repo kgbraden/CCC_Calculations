@@ -24,19 +24,31 @@ from datetime import datetime, time, timedelta
 # Set page config
 st.set_page_config(page_title="CCCCO Instructional Hours Calculator", page_icon="⏰")
 icon_url = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/icon.png" 
-
+custom_title = "CCCC Hours Calc"
 st.markdown(
     f"""
+    <script>
+        // 1. Force the Browser Tab/Home Screen Title
+        window.parent.document.title = "{custom_title}";
+        
+        // 2. Find and Replace the Favicon/Home Screen Icons
+        var link = window.parent.document.querySelector("link[rel*='icon']") || document.createElement('link');
+        link.type = 'image/png';
+        link.rel = 'shortcut icon';
+        link.href = '{icon_url}';
+        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
+        
+        // 3. Apple Touch Icon for iOS/Android high-res
+        var appleLink = window.parent.document.querySelector("link[rel*='apple-touch-icon']") || document.createElement('link');
+        appleLink.rel = 'apple-touch-icon';
+        appleLink.href = '{icon_url}';
+        window.parent.document.getElementsByTagName('head')[0].appendChild(appleLink);
+    </script>
     <div style="display:none">
         <head>
-            <link rel="apple-touch-icon" href="{icon_url}">
-            
-            <link rel="icon" sizes="192x192" href="{icon_url}">
-            <link rel="icon" sizes="512x512" href="{icon_url}">
-            
+            <title>{custom_title}</title>
             <meta name="mobile-web-app-capable" content="yes">
-            <meta name="apple-mobile-web-app-title" content="Hours Calc">
-            <meta name="theme-color" content="#FF4B4B">
+            <meta name="apple-mobile-web-app-title" content="{custom_title}">
         </head>
     </div>
     """,
