@@ -19,7 +19,7 @@
 
 import streamlit as st
 from datetime import datetime, time, timedelta
-
+import json
 
 # Set page config
 st.set_page_config(page_title="CCCCO Instructional Hours Calculator", page_icon="⏰")
@@ -27,40 +27,42 @@ st.set_page_config(page_title="CCCCO Instructional Hours Calculator", page_icon=
 ICON_URL = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/icon.png"
 APP_TITLE = "CCCCO Hours Calc"
 
+# Create a mini-manifest as a string
+manifest_data = {
+    "short_name": APP_TITLE,
+    "name": APP_TITLE,
+    "icons": [
+        {"src": ICON_URL, "sizes": "192x192", "type": "image/png"},
+        {"src": ICON_URL, "sizes": "512x512", "type": "image/png"}
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#000000",
+    "background_color": "#ffffff"
+}
+manifest_string = json.dumps(manifest_data)
+
 st.markdown(
     f"""
     <script>
-        // 1. Force the Tab Title and Icons immediately
-        function updateIcons() {{
-            const head = window.parent.document.getElementsByTagName('head')[0];
-            
-            // Handle Favicons and Home Screen Icons
-            const iconTypes = ['icon', 'shortcut icon', 'apple-touch-icon', 'apple-touch-icon-precomposed'];
-            
-            iconTypes.forEach(type => {{
-                let link = window.parent.document.querySelector(`link[rel*='${{type}}']`) || document.createElement('link');
-                link.type = 'image/png';
-                link.rel = type;
-                link.href = '{ICON_URL}';
-                head.appendChild(link);
-            }});
+        // Force Title
+        window.parent.document.title = "{APP_TITLE}";
 
-            // Force the Page Title
-            window.parent.document.title = "{APP_TITLE}";
-        }}
+        // Inject our custom Manifest to override Streamlit's
+        var manifestLink = window.parent.document.querySelector("link[rel='manifest']") || document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = 'data:application/json;base64,' + btoa('{manifest_string}');
+        window.parent.document.getElementsByTagName('head')[0].appendChild(manifestLink);
 
-        // 2. Run immediately and again when Streamlit finishes loading
-        updateIcons();
-        const observer = new MutationObserver(updateIcons);
-        observer.observe(window.parent.document.head, {{ childList: true, subtree: true }});
+        // Update Icons
+        var link = window.parent.document.querySelector("link[rel*='icon']") || document.createElement('link');
+        link.type = 'image/png';
+        link.rel = 'shortcut icon';
+        link.href = '{ICON_URL}';
+        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
     </script>
     <div style="display:none">
-        <head>
-            <title>{APP_TITLE}</title>
-            <meta name="mobile-web-app-capable" content="yes">
-            <meta name="apple-mobile-web-app-title" content="{APP_TITLE}">
-            <meta name="theme-color" content="#FF4B4B">
-        </head>
+        <link rel="apple-touch-icon" href="{ICON_URL}">
     </div>
     """,
     unsafe_allow_html=True
