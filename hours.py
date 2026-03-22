@@ -23,7 +23,7 @@ from datetime import datetime, time, timedelta
 
 # Set page config
 st.set_page_config(page_title="CCCCO Instructional Hours Calculator", page_icon="⏰")
-icon_url = "https://github.com/kgbraden/CCC_Calculations/blob/main/icon.png?raw=true" 
+icon_url = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/icon.png" 
 
 st.markdown(
     f"""
