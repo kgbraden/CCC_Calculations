@@ -22,8 +22,18 @@ from datetime import datetime, time, timedelta
 
 
 # Set page config
-st.set_page_config(page_title="Instructional Hours Calculator", page_icon="⏰")
+st.set_page_config(page_title="CCCCO Instructional Hours Calculator", page_icon="⏰")
+icon_url = "https://github.com/kgbraden/CCC_Calculations/blob/main/icon.png?raw=true" 
 
+st.markdown(
+    f"""
+    <head>
+        <link rel="apple-touch-icon" href="{icon_url}">
+        <link rel="apple-touch-icon-precomposed" href="{icon_url}">
+    </head>
+    """,
+    unsafe_allow_html=True
+)
 # Embedded data
 INSTRUCTIONAL_DATA = {
     "50": {"Clock": "00:50" , "iHours": 1, "Breaks": 0, "grey": False, "fac": 0},
@@ -137,7 +147,8 @@ def parse_time(time_str):
     return None
 
 def main():
-    st.title("⏰ Instructional Hours Calculator")
+    st.title("⏰ CCCCO Instructional Hours Calculator")
+    
     st.markdown("Select class times to calculate apportionment and instructional hours.")
 
     # 1. Time Selection Inputs
