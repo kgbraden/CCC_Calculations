@@ -27,17 +27,18 @@ icon_url = "https://github.com/kgbraden/CCC_Calculations/blob/main/icon.png?raw=
 
 st.markdown(
     f"""
-    <head>
-        <link rel="apple-touch-icon" href="{icon_url}">
-        
-        <link rel="icon" sizes="192x192" href="{icon_url}">
-        <link rel="icon" sizes="512x512" href="{icon_url}">
-        
-        <meta name="theme-color" content="#FF4B4B"> 
-        
-        <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-title" content="Hours Calc">
-    </head>
+    <div style="display:none">
+        <head>
+            <link rel="apple-touch-icon" href="{icon_url}">
+            
+            <link rel="icon" sizes="192x192" href="{icon_url}">
+            <link rel="icon" sizes="512x512" href="{icon_url}">
+            
+            <meta name="mobile-web-app-capable" content="yes">
+            <meta name="apple-mobile-web-app-title" content="Hours Calc">
+            <meta name="theme-color" content="#FF4B4B">
+        </head>
+    </div>
     """,
     unsafe_allow_html=True
 )
