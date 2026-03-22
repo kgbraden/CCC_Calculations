@@ -23,32 +23,43 @@ from datetime import datetime, time, timedelta
 
 # Set page config
 st.set_page_config(page_title="CCCCO Instructional Hours Calculator", page_icon="⏰")
-icon_url = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/icon.png" 
-custom_title = "CCCC Hours Calc"
+
+ICON_URL = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/icon.png"
+APP_TITLE = "CCCCO Hours Calc"
+
 st.markdown(
     f"""
     <script>
-        // 1. Force the Browser Tab/Home Screen Title
-        window.parent.document.title = "{custom_title}";
-        
-        // 2. Find and Replace the Favicon/Home Screen Icons
-        var link = window.parent.document.querySelector("link[rel*='icon']") || document.createElement('link');
-        link.type = 'image/png';
-        link.rel = 'shortcut icon';
-        link.href = '{icon_url}';
-        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
-        
-        // 3. Apple Touch Icon for iOS/Android high-res
-        var appleLink = window.parent.document.querySelector("link[rel*='apple-touch-icon']") || document.createElement('link');
-        appleLink.rel = 'apple-touch-icon';
-        appleLink.href = '{icon_url}';
-        window.parent.document.getElementsByTagName('head')[0].appendChild(appleLink);
+        // 1. Force the Tab Title and Icons immediately
+        function updateIcons() {{
+            const head = window.parent.document.getElementsByTagName('head')[0];
+            
+            // Handle Favicons and Home Screen Icons
+            const iconTypes = ['icon', 'shortcut icon', 'apple-touch-icon', 'apple-touch-icon-precomposed'];
+            
+            iconTypes.forEach(type => {{
+                let link = window.parent.document.querySelector(`link[rel*='${{type}}']`) || document.createElement('link');
+                link.type = 'image/png';
+                link.rel = type;
+                link.href = '{ICON_URL}';
+                head.appendChild(link);
+            }});
+
+            // Force the Page Title
+            window.parent.document.title = "{APP_TITLE}";
+        }}
+
+        // 2. Run immediately and again when Streamlit finishes loading
+        updateIcons();
+        const observer = new MutationObserver(updateIcons);
+        observer.observe(window.parent.document.head, {{ childList: true, subtree: true }});
     </script>
     <div style="display:none">
         <head>
-            <title>{custom_title}</title>
+            <title>{APP_TITLE}</title>
             <meta name="mobile-web-app-capable" content="yes">
-            <meta name="apple-mobile-web-app-title" content="{custom_title}">
+            <meta name="apple-mobile-web-app-title" content="{APP_TITLE}">
+            <meta name="theme-color" content="#FF4B4B">
         </head>
     </div>
     """,
