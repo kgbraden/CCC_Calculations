@@ -195,7 +195,7 @@ def parse_time(time_str):
 def main():
     st.title("⏰ CCCCO Instructional Hours Calculator")
     
-    st.markdown("Select class times to calculate apportionment and instructional hours.")
+    #st.markdown("Select class times to calculate apportionment and instructional hours.")
 
     # 1. Time Selection Inputs
     col1, col2 = st.columns(2)
