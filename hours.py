@@ -20,50 +20,63 @@
 import streamlit as st
 from datetime import datetime, time, timedelta
 import json
-
+import base64
 # Set page config
 st.set_page_config(page_title="CCCCO Instructional Hours Calculator", page_icon="⏰")
 
 ICON_URL = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/icon.png"
 APP_TITLE = "CCCCO Hours Calc"
 
-# Create a mini-manifest as a string
-manifest_data = {
+# Create a custom manifest as a dictionary
+manifest_dict = {
     "short_name": APP_TITLE,
     "name": APP_TITLE,
     "icons": [
-        {"src": ICON_URL, "sizes": "192x192", "type": "image/png"},
-        {"src": ICON_URL, "sizes": "512x512", "type": "image/png"}
+        {"src": ICON_URL, "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+        {"src": ICON_URL, "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
     ],
     "start_url": ".",
     "display": "standalone",
     "theme_color": "#000000",
     "background_color": "#ffffff"
 }
-manifest_string = json.dumps(manifest_data)
+
+# Encode it so it's one solid string
+manifest_b64 = base64.b64encode(json.dumps(manifest_dict).encode()).decode()
 
 st.markdown(
     f"""
     <script>
-        // Force Title
-        window.parent.document.title = "{APP_TITLE}";
+        function forceUpdate() {{
+            const head = window.parent.document.head;
+            
+            // 1. Remove ANY existing manifest (the Streamlit default)
+            const oldManifests = window.parent.document.querySelectorAll("link[rel='manifest']");
+            oldManifests.forEach(el => el.remove());
 
-        // Inject our custom Manifest to override Streamlit's
-        var manifestLink = window.parent.document.querySelector("link[rel='manifest']") || document.createElement('link');
-        manifestLink.rel = 'manifest';
-        manifestLink.href = 'data:application/json;base64,' + btoa('{manifest_string}');
-        window.parent.document.getElementsByTagName('head')[0].appendChild(manifestLink);
+            // 2. Inject our new "Data URI" manifest
+            const newManifest = window.parent.document.createElement('link');
+            newManifest.rel = 'manifest';
+            newManifest.href = 'data:application/json;base64,{manifest_b64}';
+            head.appendChild(newManifest);
 
-        // Update Icons
-        var link = window.parent.document.querySelector("link[rel*='icon']") || document.createElement('link');
-        link.type = 'image/png';
-        link.rel = 'shortcut icon';
-        link.href = '{ICON_URL}';
-        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
+            // 3. Force Icons for iOS and general browsers
+            const iconTypes = ['icon', 'apple-touch-icon'];
+            iconTypes.forEach(t => {{
+                let link = window.parent.document.querySelector(`link[rel*='${{t}}']`) || document.createElement('link');
+                link.rel = t;
+                link.href = '{ICON_URL}';
+                head.appendChild(link);
+            }});
+
+            // 4. Force Title
+            window.parent.document.title = "{APP_TITLE}";
+        }}
+
+        // Run once and setup an observer to keep it that way
+        forceUpdate();
+        new MutationObserver(forceUpdate).observe(window.parent.document.head, {{ childList: true }});
     </script>
-    <div style="display:none">
-        <link rel="apple-touch-icon" href="{ICON_URL}">
-    </div>
     """,
     unsafe_allow_html=True
 )
