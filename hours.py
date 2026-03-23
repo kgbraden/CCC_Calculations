@@ -34,59 +34,66 @@ ICON_BASE = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/ic
 ICON_URL_V5 = f"{ICON_BASE}?v=5" 
 APP_TITLE = "CCCCO Hours Calc"
 
+ICON_URL_V6 = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/icon.png?v=6"
+APP_TITLE = "CCCCO Hours Calc"
+
 manifest_dict = {
     "short_name": APP_TITLE,
     "name": APP_TITLE,
-    "id": "/cccco-calc-v5", # New ID forces Android to build a new WebAPK
+    "id": "/cccco-calc-v6", 
     "start_url": ".",
     "display": "standalone",
     "theme_color": "#ffffff",
     "background_color": "#ffffff",
     "icons": [
-        {"src": ICON_URL_V5, "sizes": "192x192", "type": "image/png", "purpose": "any"},
-        {"src": ICON_URL_V5, "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+        {"src": ICON_URL_V6, "sizes": "192x192", "type": "image/png", "purpose": "any"},
+        {"src": ICON_URL_V6, "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
     ]
 }
 
 manifest_b64 = base64.b64encode(json.dumps(manifest_dict).encode()).decode()
 
-# JavaScript for PWA and a helper function to clear cache
 st.markdown(
     f"""
     <script>
-        window.clearPWAData = function() {{
-            if ('serviceWorker' in navigator) {{
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {{
-                    for(let registration of registrations) {{ registration.unregister(); }}
-                }});
-            }}
-            window.localStorage.clear();
-            window.sessionStorage.clear();
-            alert("Local App Data Cleared. Please refresh and re-install.");
-            window.location.reload();
-        }}
-
-        function forceUpdate() {{
+        function bruteForceMetadata() {{
             const head = window.parent.document.head;
+            
+            // 1. Force the Title in 4 different places
+            window.parent.document.title = "{APP_TITLE}";
+            
+            // 2. Set Android-specific metadata (often overrides manifest)
+            let metaName = window.parent.document.querySelector("meta[name='application-name']") || document.createElement('meta');
+            metaName.name = "application-name";
+            metaName.content = "{APP_TITLE}";
+            head.appendChild(metaName);
+
+            let mobileCapable = window.parent.document.querySelector("meta[name='mobile-web-app-capable']") || document.createElement('meta');
+            mobileCapable.name = "mobile-web-app-capable";
+            mobileCapable.content = "yes";
+            head.appendChild(mobileCapable);
+
+            // 3. Update Manifest
             const oldManifests = window.parent.document.querySelectorAll("link[rel='manifest']");
             oldManifests.forEach(el => el.remove());
-
             const newManifest = window.parent.document.createElement('link');
             newManifest.rel = 'manifest';
             newManifest.href = 'data:application/json;base64,{manifest_b64}';
             head.appendChild(newManifest);
 
+            // 4. Update Icons
             const iconTypes = ['icon', 'apple-touch-icon', 'shortcut icon'];
             iconTypes.forEach(t => {{
                 let link = window.parent.document.querySelector(`link[rel='${{t}}']`) || window.parent.document.createElement('link');
                 link.rel = t;
-                link.href = '{ICON_URL_V5}';
+                link.href = '{ICON_URL_V6}';
                 head.appendChild(link);
             }});
-            window.parent.document.title = "{APP_TITLE}";
         }}
-        forceUpdate();
-        new MutationObserver(forceUpdate).observe(window.parent.document.head, {{ childList: true }});
+
+        // Run immediately and every time Streamlit tries to reset the head
+        bruteForceMetadata();
+        new MutationObserver(bruteForceMetadata).observe(window.parent.document.head, {{ childList: true, subtree: true }});
     </script>
     """,
     unsafe_allow_html=True
@@ -236,7 +243,11 @@ def main():
 
             # Detailed Logic
             if data['Breaks'] > 0:
-                st.info(f"💡 **Note:** {data['Breaks']} break(s) required. Breaks cannot be accumulated.")
+                st.info(f"💡 **Note:** {data['Breaks']} break(s) required. /n"+\
+                         "         The 10-minute break time permitted in each clock hour may not be \n"+ \
+                         "         accumulated during a multiple hour class to be taken at end of the \n"+ \
+                         "         class and be counted for FTES apportionment.\n"+ \
+                         "         Reference: T5 58023.")
 
             if data['grey']:
                 rm = 5 if data['fac'] == 10 else 10
