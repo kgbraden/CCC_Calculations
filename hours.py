@@ -260,12 +260,17 @@ def main():
 
     # --- SIDEBAR TOOLS ---
     with st.sidebar:
+        
+        """
         st.header("App Settings")
         if st.button("🧹 Clear App Cache"):
             st.markdown('<script>window.clearPWAData();</script>', unsafe_allow_html=True)
         
         st.info("If you see the Streamlit icon, click 'Clear App Cache', delete the shortcut from your home screen, and re-install.")
         
+        st.divider()
+        """
+        st.info("Programmed by Kale Braden, San Joaquin Delta College")
         st.divider()
         st.caption("Reference: T5 57001(e), 58023")
 
