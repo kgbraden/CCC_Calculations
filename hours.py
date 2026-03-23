@@ -21,13 +21,18 @@ import streamlit as st
 from datetime import datetime, time, timedelta
 import json
 import base64
-# Set page config
-st.set_page_config(page_title="CCCCO Instructional Hours Calculator", page_icon="icon.png")
 
+# 1. SET PAGE CONFIG (Must be first)
+st.set_page_config(
+    page_title="CCCCO Hours Calc", 
+    page_icon="⏰", 
+    layout="centered"
+)
+
+# 2. PWA CONFIGURATION
 ICON_URL = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/icon.png"
 APP_TITLE = "CCCCO Hours Calc"
 
-# Create a custom manifest as a dictionary
 manifest_dict = {
     "short_name": APP_TITLE,
     "name": APP_TITLE,
@@ -41,39 +46,36 @@ manifest_dict = {
     "background_color": "#ffffff"
 }
 
-# Encode it so it's one solid string
 manifest_b64 = base64.b64encode(json.dumps(manifest_dict).encode()).decode()
 
+# Inject JavaScript to handle PWA manifest and iOS icons
 st.markdown(
     f"""
     <script>
         function forceUpdate() {{
             const head = window.parent.document.head;
             
-            // 1. Remove ANY existing manifest (the Streamlit default)
+            // Remove existing manifest
             const oldManifests = window.parent.document.querySelectorAll("link[rel='manifest']");
             oldManifests.forEach(el => el.remove());
 
-            // 2. Inject our new "Data URI" manifest
+            // Inject new manifest
             const newManifest = window.parent.document.createElement('link');
             newManifest.rel = 'manifest';
             newManifest.href = 'data:application/json;base64,{manifest_b64}';
             head.appendChild(newManifest);
 
-            // 3. Force Icons for iOS and general browsers
+            // Force Icons for iOS
             const iconTypes = ['icon', 'apple-touch-icon'];
             iconTypes.forEach(t => {{
-                let link = window.parent.document.querySelector(`link[rel*='${{t}}']`) || document.createElement('link');
+                let link = window.parent.document.querySelector(`link[rel*='${{t}}']`) || window.parent.document.createElement('link');
                 link.rel = t;
                 link.href = '{ICON_URL}';
                 head.appendChild(link);
             }});
 
-            // 4. Force Title
             window.parent.document.title = "{APP_TITLE}";
         }}
-
-        // Run once and setup an observer to keep it that way
         forceUpdate();
         new MutationObserver(forceUpdate).observe(window.parent.document.head, {{ childList: true }});
     </script>
@@ -183,48 +185,28 @@ INSTRUCTIONAL_DATA = {
 
 }
 
-def parse_time(time_str):
-    """Helper to try multiple time formats."""
-    for fmt in ('%I:%M%p', '%I:%M %p', '%H:%M'):
-        try:
-            return datetime.strptime(time_str.strip().lower(), fmt)
-        except ValueError:
-            continue
-    return None
-
 def main():
-    st.title("⏰ CCCCO Instructional Hours Calculator")
-    """
-    st.set_page_config(
-        page_title="⏰ CCCCO Hours",
-        page_icon="chart_with_upwards_trend",
-       layout="wide",
-    )
-    """
-    #st.markdown("Select class times to calculate apportionment and instructional hours.")
+    st.title("⏰ CCCCO Hours Calculator")
+    st.markdown("Select class times to calculate apportionment and instructional hours.")
 
-    # 1. Time Selection Inputs
-    col1, col2 = st.columns(2)
-    with col1:
-        # Defaults to 8:00 AM
-        start_time = st.time_input("Start Time", value=time(8, 0), step=300)
-    with col2:
-        # Defaults to 9:50 AM
-        end_time = st.time_input("End Time", value=time(9, 50), step=300)
+    # Time Selection
+    with st.container(border=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            start_time = st.time_input("Start Time", value=time(8, 0), step=300)
+        with col2:
+            end_time = st.time_input("End Time", value=time(9, 50), step=300)
 
-    # 2. Calculate Duration
-    # Convert time objects to datetime to perform subtraction
+    # Calculation
     today = datetime.today()
     start_dt = datetime.combine(today, start_time)
     end_dt = datetime.combine(today, end_time)
     
-    # Handle overnight classes (if end time is before start time)
     if end_dt <= start_dt:
         end_dt += timedelta(days=1)
         
     delta = int((end_dt - start_dt).seconds / 60)
 
-    # 3. Validation and Results
     st.divider()
 
     if delta < 50:
@@ -234,30 +216,30 @@ def main():
         data = INSTRUCTIONAL_DATA.get(str(delta))
         
         if not data:
-            st.warning(f"Duration: {delta} minutes. No exact match found in the lookup table.")
+            st.warning(f"Duration: {delta} minutes. No exact match found in lookup table.")
+            st.caption("Common increments are every 5 minutes.")
         else:
-            # Unpack values safely
-            clock = data.get('Clock')
-            iH = data.get('iHours')
-            brk = data.get('Breaks', 0)
-            grey = data.get('grey', False)
-            fac = data.get('fac', 0)
-
-            # High-level Metrics
+            # Metrics
             m1, m2, m3 = st.columns(3)
-            m1.metric("Clock Hours", clock)
-            m2.metric("Instructional Hours", iH)
-            m3.metric("Required Breaks", brk)
+            m1.metric("Clock Hours", data['Clock'])
+            m2.metric("Instructional Hours", f"{data['iHours']:.1f}")
+            m3.metric("Required Breaks", data['Breaks'])
 
-            # Details
-            if brk > 0:
-                st.info(f"💡 **Note:** {brk} break(s) required. Breaks cannot be accumulated.")
+            # Detailed Logic
+            if data['Breaks'] > 0:
+                st.info(f"💡 **Note:** {data['Breaks']} break(s) required. Breaks cannot be accumulated.")
 
-            if grey:
-                rm = 5 if fac == 10 else 10
-                st.warning(f"⚠️ **'Grey' Area Detected**")
-                st.write(f"Consider removing **{rm} mins** to exit grey area, or add **{fac} mins** to gain credit.")
+            if data['grey']:
+                rm = 5 if data['fac'] == 10 else 10
+                st.warning("⚠️ **'Grey' Area Detected**")
+                st.markdown(f"""
+                This duration is inefficient for apportionment:
+                * **To gain credit:** Add **{data['fac']} mins**
+                * **To exit grey area:** Remove **{rm} mins**
+                """)
 
     st.sidebar.caption("Reference: T5 57001(e), 58023")
+    st.sidebar.write("App is PWA-ready. Use 'Add to Home Screen' on mobile.")
+
 if __name__ == '__main__':
     main()
