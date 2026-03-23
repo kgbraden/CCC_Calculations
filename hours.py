@@ -30,75 +30,62 @@ st.set_page_config(
 )
 
 # 2. PWA CONFIGURATION
-ICON_URL = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/icon.png"
+ICON_BASE = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/icon.png"
+ICON_URL_V5 = f"{ICON_BASE}?v=5" 
 APP_TITLE = "CCCCO Hours Calc"
 
 manifest_dict = {
     "short_name": APP_TITLE,
     "name": APP_TITLE,
-    "id": "/?g-hours-calc",  # Unique ID prevents Android from merging with "Streamlit"
-    "icons": [
-        {
-            "src": ICON_URL, 
-            "sizes": "192x192", 
-            "type": "image/png", 
-            "purpose": "any"
-        },
-        {
-            "src": ICON_URL, 
-            "sizes": "512x512", 
-            "type": "image/png", 
-            "purpose": "maskable" # CRITICAL for Android
-        }
-    ],
+    "id": "/cccco-calc-v5", # New ID forces Android to build a new WebAPK
     "start_url": ".",
     "display": "standalone",
     "theme_color": "#ffffff",
-    "background_color": "#ffffff"
+    "background_color": "#ffffff",
+    "icons": [
+        {"src": ICON_URL_V5, "sizes": "192x192", "type": "image/png", "purpose": "any"},
+        {"src": ICON_URL_V5, "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+    ]
 }
 
-# Encode it
 manifest_b64 = base64.b64encode(json.dumps(manifest_dict).encode()).decode()
 
+# JavaScript for PWA and a helper function to clear cache
 st.markdown(
     f"""
     <script>
+        window.clearPWAData = function() {{
+            if ('serviceWorker' in navigator) {{
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {{
+                    for(let registration of registrations) {{ registration.unregister(); }}
+                }});
+            }}
+            window.localStorage.clear();
+            window.sessionStorage.clear();
+            alert("Local App Data Cleared. Please refresh and re-install.");
+            window.location.reload();
+        }}
+
         function forceUpdate() {{
             const head = window.parent.document.head;
-            
-            // 1. Remove ANY existing manifest (the Streamlit default)
             const oldManifests = window.parent.document.querySelectorAll("link[rel='manifest']");
             oldManifests.forEach(el => el.remove());
 
-            // 2. Inject our new manifest
             const newManifest = window.parent.document.createElement('link');
             newManifest.rel = 'manifest';
             newManifest.href = 'data:application/json;base64,{manifest_b64}';
             head.appendChild(newManifest);
 
-            // 3. Android/Chrome Theme Color (helps trigger custom splash)
-            let themeColor = window.parent.document.querySelector("meta[name='theme-color']");
-            if (!themeColor) {{
-                themeColor = window.parent.document.createElement('meta');
-                themeColor.name = 'theme-color';
-                head.appendChild(themeColor);
-            }}
-            themeColor.content = '#ffffff';
-
-            // 4. Icons & Apple Touch Icons
             const iconTypes = ['icon', 'apple-touch-icon', 'shortcut icon'];
             iconTypes.forEach(t => {{
                 let link = window.parent.document.querySelector(`link[rel='${{t}}']`) || window.parent.document.createElement('link');
                 link.rel = t;
-                link.href = '{ICON_URL}';
+                link.href = '{ICON_URL_V5}';
                 head.appendChild(link);
             }});
-
             window.parent.document.title = "{APP_TITLE}";
         }}
-
         forceUpdate();
-        // Setup observer to ensure Streamlit doesn't overwrite our changes on rerun
         new MutationObserver(forceUpdate).observe(window.parent.document.head, {{ childList: true }});
     </script>
     """,
@@ -260,8 +247,16 @@ def main():
                 * **To exit grey area:** Remove **{rm} mins**
                 """)
 
-    st.sidebar.caption("Reference: T5 57001(e), 58023")
-    st.sidebar.write("App is PWA-ready. Use 'Add to Home Screen' on mobile.")
+    # --- SIDEBAR TOOLS ---
+    with st.sidebar:
+        st.header("App Settings")
+        if st.button("🧹 Clear App Cache"):
+            st.markdown('<script>window.clearPWAData();</script>', unsafe_allow_html=True)
+        
+        st.info("If you see the Streamlit icon, click 'Clear App Cache', delete the shortcut from your home screen, and re-install.")
+        
+        st.divider()
+        st.caption("Reference: T5 57001(e), 58023")
 
 if __name__ == '__main__':
     main()
