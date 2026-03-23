@@ -36,39 +36,59 @@ APP_TITLE = "CCCCO Hours Calc"
 manifest_dict = {
     "short_name": APP_TITLE,
     "name": APP_TITLE,
+    "id": "/?g-hours-calc",  # Unique ID prevents Android from merging with "Streamlit"
     "icons": [
-        {"src": ICON_URL, "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
-        {"src": ICON_URL, "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+        {
+            "src": ICON_URL, 
+            "sizes": "192x192", 
+            "type": "image/png", 
+            "purpose": "any"
+        },
+        {
+            "src": ICON_URL, 
+            "sizes": "512x512", 
+            "type": "image/png", 
+            "purpose": "maskable" # CRITICAL for Android
+        }
     ],
     "start_url": ".",
     "display": "standalone",
-    "theme_color": "#000000",
+    "theme_color": "#ffffff",
     "background_color": "#ffffff"
 }
 
+# Encode it
 manifest_b64 = base64.b64encode(json.dumps(manifest_dict).encode()).decode()
 
-# Inject JavaScript to handle PWA manifest and iOS icons
 st.markdown(
     f"""
     <script>
         function forceUpdate() {{
             const head = window.parent.document.head;
             
-            // Remove existing manifest
+            // 1. Remove ANY existing manifest (the Streamlit default)
             const oldManifests = window.parent.document.querySelectorAll("link[rel='manifest']");
             oldManifests.forEach(el => el.remove());
 
-            // Inject new manifest
+            // 2. Inject our new manifest
             const newManifest = window.parent.document.createElement('link');
             newManifest.rel = 'manifest';
             newManifest.href = 'data:application/json;base64,{manifest_b64}';
             head.appendChild(newManifest);
 
-            // Force Icons for iOS
-            const iconTypes = ['icon', 'apple-touch-icon'];
+            // 3. Android/Chrome Theme Color (helps trigger custom splash)
+            let themeColor = window.parent.document.querySelector("meta[name='theme-color']");
+            if (!themeColor) {{
+                themeColor = window.parent.document.createElement('meta');
+                themeColor.name = 'theme-color';
+                head.appendChild(themeColor);
+            }}
+            themeColor.content = '#ffffff';
+
+            // 4. Icons & Apple Touch Icons
+            const iconTypes = ['icon', 'apple-touch-icon', 'shortcut icon'];
             iconTypes.forEach(t => {{
-                let link = window.parent.document.querySelector(`link[rel*='${{t}}']`) || window.parent.document.createElement('link');
+                let link = window.parent.document.querySelector(`link[rel='${{t}}']`) || window.parent.document.createElement('link');
                 link.rel = t;
                 link.href = '{ICON_URL}';
                 head.appendChild(link);
@@ -76,7 +96,9 @@ st.markdown(
 
             window.parent.document.title = "{APP_TITLE}";
         }}
+
         forceUpdate();
+        // Setup observer to ensure Streamlit doesn't overwrite our changes on rerun
         new MutationObserver(forceUpdate).observe(window.parent.document.head, {{ childList: true }});
     </script>
     """,
