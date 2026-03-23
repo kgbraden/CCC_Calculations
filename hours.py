@@ -243,10 +243,10 @@ def main():
 
             # Detailed Logic
             if data['Breaks'] > 0:
-                st.info(f"💡 **Note:** {data['Breaks']} break(s) required. /n"+\
+                st.info(f"💡 **Note:** {data['Breaks']} break(s) required."+\
                          "         The 10-minute break time permitted in each clock hour may not be \n"+ \
                          "         accumulated during a multiple hour class to be taken at end of the \n"+ \
-                         "         class and be counted for FTES apportionment.\n"+ \
+                         "         class and be counted for FTES apportionment. "+ \
                          "         Reference: T5 58023.")
 
             if data['grey']:
