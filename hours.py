@@ -22,64 +22,9 @@ from datetime import datetime, time, timedelta
 import json
 import base64
 # Set page config
-st.set_page_config(page_title="CCCCO Instructional Hours Calculator", page_icon="⏰")
+st.set_page_config(page_title="CCCCO Instructional Hours Calculator", page_icon="icon.png")
 
-ICON_URL = "https://raw.githubusercontent.com/kgbraden/CCC_Calculations/main/icon.png"
-APP_TITLE = "CCCCO Hours Calc"
 
-# Create a custom manifest as a dictionary
-manifest_dict = {
-    "short_name": APP_TITLE,
-    "name": APP_TITLE,
-    "icons": [
-        {"src": ICON_URL, "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
-        {"src": ICON_URL, "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
-    ],
-    "start_url": ".",
-    "display": "standalone",
-    "theme_color": "#000000",
-    "background_color": "#ffffff"
-}
-
-# Encode it so it's one solid string
-manifest_b64 = base64.b64encode(json.dumps(manifest_dict).encode()).decode()
-
-st.markdown(
-    f"""
-    <script>
-        function forceUpdate() {{
-            const head = window.parent.document.head;
-            
-            // 1. Remove ANY existing manifest (the Streamlit default)
-            const oldManifests = window.parent.document.querySelectorAll("link[rel='manifest']");
-            oldManifests.forEach(el => el.remove());
-
-            // 2. Inject our new "Data URI" manifest
-            const newManifest = window.parent.document.createElement('link');
-            newManifest.rel = 'manifest';
-            newManifest.href = 'data:application/json;base64,{manifest_b64}';
-            head.appendChild(newManifest);
-
-            // 3. Force Icons for iOS and general browsers
-            const iconTypes = ['icon', 'apple-touch-icon'];
-            iconTypes.forEach(t => {{
-                let link = window.parent.document.querySelector(`link[rel*='${{t}}']`) || document.createElement('link');
-                link.rel = t;
-                link.href = '{ICON_URL}';
-                head.appendChild(link);
-            }});
-
-            // 4. Force Title
-            window.parent.document.title = "{APP_TITLE}";
-        }}
-
-        // Run once and setup an observer to keep it that way
-        forceUpdate();
-        new MutationObserver(forceUpdate).observe(window.parent.document.head, {{ childList: true }});
-    </script>
-    """,
-    unsafe_allow_html=True
-)
 # Embedded data
 INSTRUCTIONAL_DATA = {
     "50": {"Clock": "00:50" , "iHours": 1, "Breaks": 0, "grey": False, "fac": 0},
@@ -199,7 +144,7 @@ def main():
         page_icon="chart_with_upwards_trend",
         layout="wide",
     )
-    #st.markdown("Select class times to calculate apportionment and instructional hours.")
+    st.markdown("Select class times to calculate apportionment and instructional hours.")
 
     # 1. Time Selection Inputs
     col1, col2 = st.columns(2)
